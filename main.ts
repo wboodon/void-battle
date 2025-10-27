@@ -1,9 +1,13 @@
 tiles.setCurrentTilemap(tilemap`level1`);
+let map = vb.currentMap();
 scene.centerCameraAt(96, 68);
 //game.debug = true;
 let isP1Turn: boolean = true;
 
-let player1Sprite = new VoidBattle.VBPlayerSprite(img`
+/**
+ * Player 1 setup
+ */
+let player1Sprite = new vb.VBPlayerSprite(img`
     . . . . . . f f f f . . . . . .
     . . . . f f f 2 2 f f f . . . .
     . . . f f f 2 2 2 2 f f f . . .
@@ -27,7 +31,7 @@ player1Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`heroWalkRight`, 200, true),
     new animation.Animation(assets.animation`heroWalkFront`, 200, true)
 ]);
-tiles.placeOnTile(player1Sprite, tiles.getTileLocation(1, 7));
+map.placeOnTile(player1Sprite, vb.location(1, 7));
 player1Sprite.onTurnEnd(function() {
     isP1Turn = false;
     player2Sprite.startTurn();
@@ -40,7 +44,10 @@ player1Sprite.onDeath(function() {
     game.gameOverPlayerWin(2);
 })
 
-let player2Sprite = new VoidBattle.VBPlayerSprite(img`
+/**
+ * Player 2 setup
+ */
+let player2Sprite = new vb.VBPlayerSprite(img`
     . . . . . . f f f f . . . . . .
     . . . . f f f 2 2 f f f . . . .
     . . . f f f 2 2 2 2 f f f . . .
@@ -64,8 +71,8 @@ player2Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`witchRight`, 200, true),
     new animation.Animation(assets.animation`witchForward`, 200, true)
 ]);
-tiles.placeOnTile(player2Sprite, tiles.getTileLocation(2, 7));
-//tiles.placeOnTile(player2Sprite, tiles.getTileLocation(10, 2));
+//map.placeOnTile(player2Sprite, vb.location(2, 7));
+map.placeOnTile(player2Sprite, vb.location(10, 2));
 player2Sprite.onTurnEnd(function () {
     isP1Turn = true;
     player1Sprite.startTurn();

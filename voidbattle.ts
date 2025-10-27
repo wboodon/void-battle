@@ -28,8 +28,8 @@ namespace animation {
         let state: AnimationState = game.currentScene().data[stateNamespace];
         if(state && state.animations) {
             state.animations.forEach((anim: SpriteAnimation) => {
-                if (anim.sprite instanceof VoidBattle.VBSprite) {
-                    const vbs = anim.sprite as VoidBattle.VBSprite;
+                if (anim.sprite instanceof vb.VBSprite) {
+                    const vbs = anim.sprite as vb.VBSprite;
                     if(vbs.sm)
                         vbs.sm.animationActive = true;
                 }
@@ -55,12 +55,12 @@ namespace animation {
     export class AnimationStateMachine {
         dir: Direction = Direction.Down;
         lastDir: Direction = Direction.Down;
-        sprite: VoidBattle.VBSprite;
+        sprite: vb.VBSprite;
         lastAction: number;
         animationActive: boolean = false;
         stateAnimations: AnimationMap = {};
 
-        constructor(sprite: VoidBattle.VBSprite) {
+        constructor(sprite: vb.VBSprite) {
             this.sprite = sprite;
             this.lastAction = sprite._action;
             this._init();
@@ -123,7 +123,7 @@ namespace animation {
 }
 
 
-namespace VoidBattle {
+namespace vb {
     let collisionSprite: Sprite
     let detectionSetUp: boolean = false;
 
@@ -157,7 +157,7 @@ namespace VoidBattle {
         constructor(loc: tiles.Location, callback: (detector: SpriteDetector, overlappers: Sprite[], isOnWall: boolean) => void) {
             super(assets.image`hitboxPlaceholder`, SpriteKind.Detector);
             this.setFlag(SpriteFlag.Invisible, true);
-            tiles.placeOnTile(this, loc);
+            //placeOnTile(this, loc);
             this.cb = callback;
         }
 
@@ -184,7 +184,10 @@ namespace VoidBattle {
         hitboxWidth: number = 16;
         hitboxHeight: number = 16;
 
-        constructor(spriteImage: Image, kind?: number, dir?: Direction) {
+        // trust me bro you dont wanna set this yourself
+        location: Location;
+
+        constructor(spriteImage: Image, kind?: number, dir?: Direction, loc?: Location) {
             super(spriteImage, kind);
             this.flags ^= SpriteFlag.GhostThroughWalls;
             this.setDimensions(this.hitboxWidth, this.hitboxHeight);
@@ -197,8 +200,8 @@ namespace VoidBattle {
                 console.log("setting up detection!");
                 sprites.onOverlap(SpriteKind.Detector, SpriteKind.Player, function (sprite: Sprite, otherSprite: Sprite) {
                     console.log("hello")
-                    if (sprite instanceof VoidBattle.SpriteDetector) {
-                        const sd = sprite as VoidBattle.SpriteDetector;
+                    if (sprite instanceof SpriteDetector) {
+                        const sd = sprite as vb.SpriteDetector;
                         sd.overlappers.push(otherSprite);
                         console.log(sd.overlappers);
                     }
@@ -210,7 +213,8 @@ namespace VoidBattle {
                 this.setDirection(dir);
             else
                 this.setDirection(Direction.Down);
-            
+
+            this.location = loc ? loc : location(0, 0);            
         }
 
         // Accounts for the offset from the hitbox, which is wider so we can
@@ -221,6 +225,9 @@ namespace VoidBattle {
             super.draw(drawLeft, drawTop);
         }
 
+        /**
+         * todo: update location on the vb map from here?
+         */
         setPosition(x: number, y: number): void {
             const physics = game.currentScene().physicsEngine;
             physics.moveSprite(
@@ -247,7 +254,8 @@ namespace VoidBattle {
         die() {
             if (this.onDeathCallback){
                 control.runInParallel(this.onDeathCallback);
-            } 
+            }
+            currentMap().removeFromMap(this);
         }
 
         onDeath(cb: () => void) {
@@ -259,39 +267,29 @@ namespace VoidBattle {
             this.sm.setDirection(dir);
         }
 
-        getNeighboringLocation(dir: Direction): tiles.Location {
-            const loc: tiles.Location = this.tilemapLocation();
-            let neighbor: tiles.Location;
-            switch (dir) {
-                case Direction.Left:
-                    neighbor = loc.getNeighboringLocation(CollisionDirection.Left);
-                    break;
-                case Direction.Up:
-                    neighbor = loc.getNeighboringLocation(CollisionDirection.Top);
-                    break;
-                case Direction.Right:
-                    neighbor = loc.getNeighboringLocation(CollisionDirection.Right);
-                    break;
-                case Direction.Down:
-                    neighbor = loc.getNeighboringLocation(CollisionDirection.Bottom);
-                    break;
-            }
-            return neighbor;
+        getNeighboringLocation(dir: Direction): Location {
+            return this.location.getNeighbor(dir);
         }
         
         // moves this sprite in a certain direction. Returns true if the move
         // was successful
+        /*
         move(dir: Direction, turnToFaceDirection: boolean = false): boolean {
             const neighbor = this.getNeighboringLocation(dir);
             
             if(turnToFaceDirection)
                 this.setDirection(dir);
 
+            /*
             if (tiles.tileAtLocationIsWall(neighbor)) {
                 scene.cameraShake(2, 200);
                 return false;
             }
-        
+            
+            if (location(neighbor.column, neighbor.row).isWall()) {
+                scene.cameraShake(2, 200);
+                return false;
+            }
             //const overlaps: Sprite[] = getCollisionsAtLocation(neighbor);
             const neighborSprite = this.getNeighboringSprite(neighbor);
 
@@ -300,11 +298,12 @@ namespace VoidBattle {
             
             // gotta do it twice because there's a bug where it ignores the ghost 
             // through walls flag
-            //tiles.placeOnTile(this, neighbor);
-            tiles.placeOnTile(this, neighbor);
+            //placeOnTile(this, neighbor);
+            placeOnTile(this, neighbor);
             return true;
             
         }
+*/
 
         getNeighboringSprite(loc: tiles.Location): Sprite {
             const engine = game.currentScene().physicsEngine;
@@ -330,10 +329,6 @@ namespace VoidBattle {
     export class VBPlayerSprite extends VBSprite {
         ctrl: controller.Controller;
         isMyTurn: boolean = false;
-        // used when the player has already started an input but is waiting on some
-        // number of processes to complete before control can be restored or the turn
-        // can end
-        awaitingTurnCompletion: boolean = false;
         turnEndCallback: () => void;
         storedTile: Image;
         // failsafe if there are shenanigans with the turns
@@ -376,13 +371,12 @@ namespace VoidBattle {
         }
 
         endTurn() {
-            this.awaitingTurnCompletion = false;
             this.isMyTurn = false;
             if( this.turnEndCallback ) this.turnEndCallback();
         }
 
         handleButtonInput(button: ControllerButton, event: ControllerButtonEvent) {
-            if(this.awaitingTurnCompletion || this.controlsLocked || !this.isMyTurn) return;
+            if(this.controlsLocked || !this.isMyTurn) return;
             
             switch(button) {
                 case ControllerButton.Left:
@@ -407,27 +401,26 @@ namespace VoidBattle {
         // step in a particular direction
         // if there is an immovable obstacle, face it but do not move
         step(dir: Direction) {
-            this.awaitingTurnCompletion = true;
-
             this.setDirection(dir);
             const neighbor = this.getNeighboringLocation(dir);
+            
+            if (neighbor.isWall()){
+                // it's a wall
+                scene.cameraShake(2, 200);
+            } else if (neighbor.isOccupied()) {
+                // handle walking into a cell with another sprite
+            } else {
+                // move
+                placeOnTile(this, neighbor);
+            }
+            
+            this.endTurn();
 
-            const detector = new SpriteDetector(neighbor, (detector: SpriteDetector, overlappers: Sprite[], isOnWall: boolean) => {
-                if (isOnWall)
-                    scene.cameraShake(2, 200);
-                else if (overlappers && overlappers.length > 0) {}
-                else
-                    tiles.placeOnTile(this, neighbor);
-                
-                sprites.destroy(detector);//, effects.spray, 200);
-                this.awaitingTurnCompletion = false;
-                this.endTurn();
-            });
         }
 
         // attempts to interact using the A button. If the action fails, return false
         tryPrimaryAction() {
-            const neighbor: tiles.Location = this.getNeighboringLocation(this.dir);
+            const neighbor: tiles.Location = this.getNeighboringLocation(this.dir).tl;
             
             if (tiles.tileAtLocationIsWall(neighbor))
                 return;
