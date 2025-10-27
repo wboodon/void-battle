@@ -6,7 +6,7 @@ namespace myTiles {
     helpers._registerFactory("tilemap", function(name: string) {
         switch(helpers.stringTrim(name)) {
             case "level1":
-            case "level1":return tiles.createTilemap(hex`0c000900000000000000000000000000000000000000000000000000000000000000000001010100000000000000000001010100000000000000000001010100000101010000000000000000000101010200000000000000000101010000000000000000000000000000000000000000`, img`
+            case "level1":return tiles.createTilemap(hex`0c000900000000000000000000000000000000000000000000000000000000000000000001010100000000000000000001010100000000000000000001010100000101010000000000000000000101010000000000000000000101010000000000000000000000000000000000000000`, img`
 2 2 2 2 2 2 2 2 2 2 2 2 
 2 2 2 2 2 2 2 2 2 2 2 2 
 2 . . . . . . . . . . 2 
@@ -16,7 +16,19 @@ namespace myTiles {
 2 . . . . . . . . . . 2 
 2 . . . . . . . . . . 2 
 2 2 2 2 2 2 2 2 2 2 2 2 
-`, [myTiles.transparency16,sprites.dungeon.floorLight2,sprites.castle.tileGrass1], TileScale.Sixteen);
+`, [myTiles.transparency16,sprites.dungeon.floorLight2], TileScale.Sixteen);
+            case "level0":
+            case "level2":return tiles.createTilemap(hex`0c000900000000000000000000000000000000000000000000000000000002010201020102010000000001020102010201020000000002010201020102010000000001020102010201020000000002010201020102010000000001020102010201020000000000000000000000000000`, img`
+2 2 2 2 2 2 2 2 2 2 2 2 
+2 2 2 2 2 2 2 2 2 2 2 2 
+2 . . . . . . . . . . 2 
+2 . . . . . . . . . . 2 
+2 . . . . . . . . . . 2 
+2 . . . . . . . . . . 2 
+2 . . . . . . . . . . 2 
+2 . . . . . . . . . . 2 
+2 2 2 2 2 2 2 2 2 2 2 2 
+`, [myTiles.transparency16,sprites.dungeon.floorLight2,sprites.dungeon.floorDark2], TileScale.Sixteen);
         }
         return null;
     })

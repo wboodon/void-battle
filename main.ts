@@ -1,6 +1,77 @@
-tiles.setCurrentTilemap(tilemap`level1`);
+const numLevels = 3;
+let level = 0;
+
+game.showLongText("Welcome to Void Battle! This is a 2-player PvP game, so grab a friend!", DialogLayout.Full);
+
+while (level < 1 || level > numLevels) {
+    game.showLongText("There are " + numLevels + " levels to pick from at the moment.", DialogLayout.Full);
+    level = game.askForNumber("Which level would you like to play? (1 - " + numLevels + ")", 1);
+}
+
+let p1Start = vb.location(1, 7);
+let p2Start = vb.location(10, 2);
+
 let map = vb.currentMap();
 scene.centerCameraAt(96, 68);
+
+switch(level) {
+    case 1:
+        tiles.setCurrentTilemap(tilemap`level0`);
+        p1Start = vb.location(2, 7);
+        p2Start = vb.location(9, 2); 
+        break;
+    case 3:
+        tiles.setCurrentTilemap(tilemap`level0`);
+        p1Start = vb.location(2, 7);
+        p2Start = vb.location(9, 2);
+        for( const loc of tiles.getTilesByType(img`
+            b d d d d d d d d d d d d d d c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            d b b b b b b b b b b b b b b c
+            c c c c c c c c c c c c c c c a
+        `)) {
+            let boulder = new vb.VBSprite(img`
+    . . . . . . . . b b b b b . . .
+    . . . . . . b b d d d d b b . .
+    . . . . . b d d d d d d d c . .
+    . . . . c d d d d d d d d c . .
+    . . . c b d d d d d d d b c c .
+    . . . c b b d d d d b c c c c .
+    . . c c d b b b c c c c c c c .
+    . . c c c d d d d c c d d d c c
+    . c d b c c b b c c d d d d d c
+    . c b d d b b b c c d d d d d c
+    . c c b b b b c b c b d d d b c
+    c b b c c c c c b b b b b c c c
+    c c b b c c c c c d d d d d b c
+    c c c c c c b b b b b c c c c c
+    c c c c c c c b b b b b c c c c
+    c c c c c c c c b b b b b c c c
+`, vb.location(loc.column, loc.row));
+            boulder.pushable = true;
+            boulder.canCrush = true;
+            boulder.sm.setStateAnimations(SpriteAction.Idle, [
+                new animation.Animation(assets.animation`boulder`, 200, true)
+            ]);
+        }
+        break;
+    default:
+        tiles.setCurrentTilemap(tilemap`level1`);
+        break;
+}
+
 //game.debug = true;
 let isP1Turn: boolean = true;
 
@@ -24,12 +95,12 @@ let player1Sprite = new vb.VBPlayerSprite(img`
     . . 4 4 f 4 4 5 5 4 4 f 4 4 . .
     . . . . . f f f f f f . . . . .
     . . . . . f f . . f f . . . . .
-`, controller.player1, vb.location(1, 7), SpriteKind.Player, Direction.Up);
+`, controller.player1, p1Start, SpriteKind.Player, Direction.Up);
 player1Sprite.sm.setStateAnimations(SpriteAction.Idle, [
-    new animation.Animation(assets.animation`heroWalkLeft`, 200, true),
-    new animation.Animation(assets.animation`heroWalkBack`, 200, true),
-    new animation.Animation(assets.animation`heroWalkRight`, 200, true),
-    new animation.Animation(assets.animation`heroWalkFront`, 200, true)
+    new animation.Animation(assets.animation`witchLeft`, 200, true),
+    new animation.Animation(assets.animation`witchBack`, 200, true),
+    new animation.Animation(assets.animation`witchRight`, 200, true),
+    new animation.Animation(assets.animation`witchForward`, 200, true)
 ]);
 //map.placeOnTile(player1Sprite, vb.location(1, 7));
 player1Sprite.onTurnEnd(function() {
@@ -64,12 +135,12 @@ let player2Sprite = new vb.VBPlayerSprite(img`
     . . 4 4 f 4 4 5 5 4 4 f 4 4 . .
     . . . . . f f f f f f . . . . .
     . . . . . f f . . f f . . . . .
-`, controller.player2, vb.location(2, 7), SpriteKind.Player, Direction.Down);
+`, controller.player2, p2Start, SpriteKind.Player, Direction.Down);
 player2Sprite.sm.setStateAnimations(SpriteAction.Idle, [
-    new animation.Animation(assets.animation`witchLeft`, 200, true),
-    new animation.Animation(assets.animation`witchBack`, 200, true),
-    new animation.Animation(assets.animation`witchRight`, 200, true),
-    new animation.Animation(assets.animation`witchForward`, 200, true)
+    new animation.Animation(assets.animation`purpleWitchLeft`, 200, true),
+    new animation.Animation(assets.animation`purpleWitchBack`, 200, true),
+    new animation.Animation(assets.animation`purpleWitchRight`, 200, true),
+    new animation.Animation(assets.animation`purpleWitchForward`, 200, true)
 ]);
 //map.placeOnTile(player2Sprite, vb.location(2, 7));
 //map.placeOnTile(player2Sprite, vb.location(10, 2));
@@ -85,6 +156,7 @@ player2Sprite.onDeath(function () {
     game.gameOverPlayerWin(1);
 })
 
+/*
 let boulder = new vb.VBSprite(img`
     . . . . . . . . b b b b b . . .
     . . . . . . b b d d d d b b . .
@@ -132,7 +204,7 @@ boulder.canCrush = true;
 boulder.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`boulder`, 200, true)
 ])
-
+*/
 game.onPaint(function() {
     // draw HUD
     screen.drawLine(0, 0, 160, 0, isP1Turn ? 4 : 9);

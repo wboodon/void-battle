@@ -1,4 +1,16 @@
- 
+ # Void Battle
+ A 2 player PvP game built in MakeCode Arcade and inspired by Void Stranger!
+
+ Turn-based tile movement and manipulation. Push your opponent into the void, crush them under a boulder, or trap them and force them to jump!
+
+ ## To Do
+ - More animations
+ - Develop the art style a bit
+ - Tiles with unique properties
+ - Randomized layout
+ - Larger maps with a moving camera
+ - Enemies
+ - Picking from multiple maps
 
 
 > Open this page at [https://wboodon.github.io/void-battle/](https://wboodon.github.io/void-battle/)
