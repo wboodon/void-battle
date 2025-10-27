@@ -124,56 +124,6 @@ namespace animation {
 
 
 namespace vb {
-    let collisionSprite: Sprite
-    let detectionSetUp: boolean = false;
-
-    // does not work
-    export function getCollisionsAtLocation(location: tiles.Location): Sprite[] {
-        const s: Sprite = sprites.create(assets.image`hitboxPlaceholder`);
-        s.setFlag(SpriteFlag.Invisible, true);
-        tiles.placeOnTile(s, location);
-        
-        const overlaps = game.currentScene().physicsEngine.overlaps(s);
-        sprites.destroy(s);
-        return overlaps;
-    }
-
-    export function vbCollisionCheck(location: tiles.Location, callback: (overlaps: Sprite[]) => void) {
-        control.runInParallel(() => {
-            tiles.placeOnTile(collisionSprite, location);
-            pause(1);
-            const overlaps = game.currentScene().physicsEngine.overlaps(collisionSprite);
-            callback(overlaps);
-        });
-    }
-
-    export class SpriteDetector extends sprites.ExtendableSprite {
-        
-        overlappers: Sprite[] = [];
-        cb: (detector: SpriteDetector, overlappers: Sprite[], isOnWall: boolean) => void;
-        isActive: boolean = true;
-        framesToWait: number = 2;
-
-        constructor(loc: tiles.Location, callback: (detector: SpriteDetector, overlappers: Sprite[], isOnWall: boolean) => void) {
-            super(assets.image`hitboxPlaceholder`, SpriteKind.Detector);
-            this.setFlag(SpriteFlag.Invisible, true);
-            //placeOnTile(this, loc);
-            this.cb = callback;
-        }
-
-        update(deltaTimeMillis: number) {
-            this.framesToWait --
-            if (this.framesToWait <= 0)
-                if (this.isActive && this.cb) {
-                    console.log("hi");
-                    console.log(this.overlappers);
-                    const isOnWall: boolean = tiles.tileAtLocationIsWall(this.tilemapLocation());
-                    this.cb(this, this.overlappers, isOnWall);
-                }
-            this.overlappers = [];
-        }
-    }
-
     const tileSize = 16;
     export class VBSprite extends sprites.ExtendableSprite {
         sm: animation.AnimationStateMachine;
@@ -181,13 +131,15 @@ namespace vb {
         onDeathCallback: () => void;
         canPush: boolean = false;
         pushable: boolean = false;
+        canCrush: boolean = false;
+        crushable: boolean = false;
         hitboxWidth: number = 16;
         hitboxHeight: number = 16;
 
         // trust me bro you dont wanna set this yourself
         location: Location;
 
-        constructor(spriteImage: Image, kind?: number, dir?: Direction, loc?: Location) {
+        constructor(spriteImage: Image, loc?: Location, kind?: number, dir?: Direction) {
             super(spriteImage, kind);
             this.flags ^= SpriteFlag.GhostThroughWalls;
             this.setDimensions(this.hitboxWidth, this.hitboxHeight);
@@ -196,25 +148,13 @@ namespace vb {
             this.sm = new animation.AnimationStateMachine(this);
             this._action = SpriteAction.Idle;
 
-            if(!detectionSetUp) {
-                console.log("setting up detection!");
-                sprites.onOverlap(SpriteKind.Detector, SpriteKind.Player, function (sprite: Sprite, otherSprite: Sprite) {
-                    console.log("hello")
-                    if (sprite instanceof SpriteDetector) {
-                        const sd = sprite as vb.SpriteDetector;
-                        sd.overlappers.push(otherSprite);
-                        console.log(sd.overlappers);
-                    }
-                });
-                detectionSetUp = true;
-            }
-
             if (dir)
                 this.setDirection(dir);
             else
                 this.setDirection(Direction.Down);
 
-            this.location = loc ? loc : location(0, 0);            
+            if (loc)
+                placeOnTile(this, loc);           
         }
 
         // Accounts for the offset from the hitbox, which is wider so we can
@@ -252,10 +192,9 @@ namespace vb {
         }
 
         die() {
-            if (this.onDeathCallback){
-                control.runInParallel(this.onDeathCallback);
-            }
             currentMap().removeFromMap(this);
+            if (this.onDeathCallback)
+                control.runInParallel(this.onDeathCallback);
         }
 
         onDeath(cb: () => void) {
@@ -270,58 +209,21 @@ namespace vb {
         getNeighboringLocation(dir: Direction): Location {
             return this.location.getNeighbor(dir);
         }
-        
-        // moves this sprite in a certain direction. Returns true if the move
-        // was successful
-        /*
-        move(dir: Direction, turnToFaceDirection: boolean = false): boolean {
-            const neighbor = this.getNeighboringLocation(dir);
-            
-            if(turnToFaceDirection)
-                this.setDirection(dir);
 
-            /*
-            if (tiles.tileAtLocationIsWall(neighbor)) {
-                scene.cameraShake(2, 200);
-                return false;
-            }
-            
-            if (location(neighbor.column, neighbor.row).isWall()) {
-                scene.cameraShake(2, 200);
-                return false;
-            }
-            //const overlaps: Sprite[] = getCollisionsAtLocation(neighbor);
-            const neighborSprite = this.getNeighboringSprite(neighbor);
+        push(dir: Direction) {
+            const loc = this.getNeighboringLocation(dir);
+            if (!loc || !this.pushable || loc.isWall())
+                return;
 
-            if(neighborSprite)
-                return false;
-            
-            // gotta do it twice because there's a bug where it ignores the ghost 
-            // through walls flag
-            //placeOnTile(this, neighbor);
-            placeOnTile(this, neighbor);
-            return true;
-            
-        }
-*/
+            if (!loc.isOccupied())
+                placeOnTile(this, loc);
 
-        getNeighboringSprite(loc: tiles.Location): Sprite {
-            const engine = game.currentScene().physicsEngine;
-            let neighbors: Sprite[];
-            // the overlaps function simply does not work :/ i hate this engine so much
-            /*
-            if(engine instanceof ArcadePhysicsEngine){
-                const ape = engine as ArcadePhysicsEngine;
-                neighbors = ape.map.neighbors(this)
-            }
-            */
-            let overlaps = game.currentScene().physicsEngine.overlaps(this);
-            for(let i = 0; i < overlaps.length; i++) {
-                const s = overlaps[i];
-                if (s.tilemapLocation().column == loc.column && s.tilemapLocation().row == loc.row)
-                    return s;
-            }
-            return null;
+            const target = loc.getSprite()
+            if (this.canCrush && target && target.crushable ) {
+                sprites.destroy(target, effects.spray, 300);
+                target.die();
+                placeOnTile(this, loc);
+            }            
         }
 
     }
@@ -334,12 +236,14 @@ namespace vb {
         // failsafe if there are shenanigans with the turns
         controlsLocked: boolean = false;
 
-        constructor(spriteImage: Image, ctrl: controller.Controller, kind?: number, dir?: Direction){
-            super(spriteImage, kind, dir);
+        constructor(spriteImage: Image, ctrl: controller.Controller, loc?: Location, kind?: number, dir?: Direction){
+            super(spriteImage, loc, kind, dir);
             this.ctrl = ctrl;
             this._setupButtonEvents();
             this.canPush = true;
             this.pushable = true;
+            this.canCrush = false;
+            this.crushable = true;
         }
 
         _setupButtonEvents() {
@@ -395,7 +299,6 @@ namespace vb {
                     this.tryPrimaryAction();
                     break;
             }
-            //if (moveCompleted) this.endTurn();
         }
 
         // step in a particular direction
@@ -409,6 +312,7 @@ namespace vb {
                 scene.cameraShake(2, 200);
             } else if (neighbor.isOccupied()) {
                 // handle walking into a cell with another sprite
+                neighbor.getSprite().push(dir);
             } else {
                 // move
                 placeOnTile(this, neighbor);
@@ -420,17 +324,18 @@ namespace vb {
 
         // attempts to interact using the A button. If the action fails, return false
         tryPrimaryAction() {
-            const neighbor: tiles.Location = this.getNeighboringLocation(this.dir).tl;
+            const neighbor: Location = this.getNeighboringLocation(this.dir);
+            const neighborTl: tiles.Location = neighbor.tl;
             
-            if (tiles.tileAtLocationIsWall(neighbor))
+            if (neighbor.isWall() || neighbor.isOccupied())
                 return;
-            else if (tiles.tileAtLocationEquals(neighbor, assets.image`blankTile`) && this.storedTile) {
-                tiles.setTileAt(neighbor, this.storedTile);
+            else if (tiles.tileAtLocationEquals(neighborTl, assets.image`blankTile`) && this.storedTile) {
+                tiles.setTileAt(neighborTl, this.storedTile);
                 this.storedTile = null;
                 this.endTurn();
-            } else if (!tiles.tileAtLocationEquals(neighbor, assets.image`blankTile`) && !this.storedTile) {
-                this.storedTile = tiles.getTileImage(neighbor);
-                tiles.setTileAt(neighbor, assets.image`blankTile`);
+            } else if (!tiles.tileAtLocationEquals(neighborTl, assets.image`blankTile`) && !this.storedTile) {
+                this.storedTile = tiles.getTileImage(neighborTl);
+                tiles.setTileAt(neighborTl, assets.image`blankTile`);
                 this.endTurn();
             }
         }

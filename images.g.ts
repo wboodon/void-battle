@@ -698,6 +698,25 @@ bd1dbbbbbbbbbbbbd1db
 . . . . c e e 5 5 5 5 5 f . . . 
 . . . . . f f f f f f f . . . . 
 `];
+            case "boulder":
+            case "anim10":return [img`
+. . . . . . . . b b b b b . . . 
+. . . . . . b b d d d d b b . . 
+. . . . . b d d d d d d d c . . 
+. . . . c d d d d d d d d c . . 
+. . . c b d d d d d d d b c c . 
+. . . c b b d d d d b c c c c . 
+. . c c d b b b c c c c c c c . 
+. . c c c d d d d c c d d d c c 
+. c d b c c b b c c d d d d d c 
+. c b d d b b b c c d d d d d c 
+. c c b b b b c b c b d d d b c 
+c b b c c c c c b b b b b c c c 
+c c b b c c c c c d d d d d b c 
+c c c c c c b b b b b c c c c c 
+c c c c c c c b b b b b c c c c 
+c c c c c c c c b b b b b c c c 
+`];
         }
         return null;
     })

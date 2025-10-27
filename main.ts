@@ -24,14 +24,14 @@ let player1Sprite = new vb.VBPlayerSprite(img`
     . . 4 4 f 4 4 5 5 4 4 f 4 4 . .
     . . . . . f f f f f f . . . . .
     . . . . . f f . . f f . . . . .
-`, controller.player1, SpriteKind.Player, Direction.Up);
+`, controller.player1, vb.location(1, 7), SpriteKind.Player, Direction.Up);
 player1Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`heroWalkLeft`, 200, true),
     new animation.Animation(assets.animation`heroWalkBack`, 200, true),
     new animation.Animation(assets.animation`heroWalkRight`, 200, true),
     new animation.Animation(assets.animation`heroWalkFront`, 200, true)
 ]);
-map.placeOnTile(player1Sprite, vb.location(1, 7));
+//map.placeOnTile(player1Sprite, vb.location(1, 7));
 player1Sprite.onTurnEnd(function() {
     isP1Turn = false;
     player2Sprite.startTurn();
@@ -64,7 +64,7 @@ let player2Sprite = new vb.VBPlayerSprite(img`
     . . 4 4 f 4 4 5 5 4 4 f 4 4 . .
     . . . . . f f f f f f . . . . .
     . . . . . f f . . f f . . . . .
-`, controller.player2, SpriteKind.Player, Direction.Down);
+`, controller.player2, vb.location(2, 7), SpriteKind.Player, Direction.Down);
 player2Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`witchLeft`, 200, true),
     new animation.Animation(assets.animation`witchBack`, 200, true),
@@ -72,7 +72,7 @@ player2Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`witchForward`, 200, true)
 ]);
 //map.placeOnTile(player2Sprite, vb.location(2, 7));
-map.placeOnTile(player2Sprite, vb.location(10, 2));
+//map.placeOnTile(player2Sprite, vb.location(10, 2));
 player2Sprite.onTurnEnd(function () {
     isP1Turn = true;
     player1Sprite.startTurn();
@@ -84,6 +84,54 @@ player2Sprite.onDeath(function () {
     game.setGameOverMessage(true, "Player 1 Wins!");
     game.gameOverPlayerWin(1);
 })
+
+let boulder = new vb.VBSprite(img`
+    . . . . . . . . b b b b b . . .
+    . . . . . . b b d d d d b b . .
+    . . . . . b d d d d d d d c . .
+    . . . . c d d d d d d d d c . .
+    . . . c b d d d d d d d b c c .
+    . . . c b b d d d d b c c c c .
+    . . c c d b b b c c c c c c c .
+    . . c c c d d d d c c d d d c c
+    . c d b c c b b c c d d d d d c
+    . c b d d b b b c c d d d d d c
+    . c c b b b b c b c b d d d b c
+    c b b c c c c c b b b b b c c c
+    c c b b c c c c c d d d d d b c
+    c c c c c c b b b b b c c c c c
+    c c c c c c c b b b b b c c c c
+    c c c c c c c c b b b b b c c c
+`, vb.location(2, 6));
+boulder.pushable = true;
+boulder.canCrush = true;
+boulder.sm.setStateAnimations(SpriteAction.Idle, [
+    new animation.Animation(assets.animation`boulder`, 200, true)
+])
+
+boulder = new vb.VBSprite(img`
+    . . . . . . . . b b b b b . . .
+    . . . . . . b b d d d d b b . .
+    . . . . . b d d d d d d d c . .
+    . . . . c d d d d d d d d c . .
+    . . . c b d d d d d d d b c c .
+    . . . c b b d d d d b c c c c .
+    . . c c d b b b c c c c c c c .
+    . . c c c d d d d c c d d d c c
+    . c d b c c b b c c d d d d d c
+    . c b d d b b b c c d d d d d c
+    . c c b b b b c b c b d d d b c
+    c b b c c c c c b b b b b c c c
+    c c b b c c c c c d d d d d b c
+    c c c c c c b b b b b c c c c c
+    c c c c c c c b b b b b c c c c
+    c c c c c c c c b b b b b c c c
+`, vb.location(2, 5));
+boulder.pushable = true;
+boulder.canCrush = true;
+boulder.sm.setStateAnimations(SpriteAction.Idle, [
+    new animation.Animation(assets.animation`boulder`, 200, true)
+])
 
 game.onPaint(function() {
     // draw HUD

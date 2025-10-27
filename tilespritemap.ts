@@ -36,6 +36,10 @@ namespace vb {
                     return new Location(this.column - 1, this.row);
             }
         }
+
+        getSprite(): VBSprite {
+            return currentMap().getSpriteAtTile(this);
+        }
     }
 
     export class VBMap {
@@ -90,6 +94,8 @@ namespace vb {
          * Returns null if no location is associated with the sprite.
          */
         findSpriteLocation(sprite: VBSprite): Location {
+            if(!sprite) return null;
+
             const spriteLoc = sprite.location;
 
             // note: if the sprite doesn't have a set location, we still need to go
@@ -97,7 +103,7 @@ namespace vb {
             // reason
 
             // the sprite's stored location is accurate
-            if (sprite == this.spriteMap[spriteLoc.key])
+            if (spriteLoc && sprite == this.spriteMap[spriteLoc.key])
                 return spriteLoc;
             
             // there has been a desync. we must find the location we believe the sprite is at

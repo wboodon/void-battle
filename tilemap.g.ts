@@ -13,7 +13,7 @@ namespace myTiles {
 2 . . . . . . . . . . 2 
 2 . . . . . . . . . . 2 
 2 . . . . . . . . . . 2 
-2 . . . 2 . . . . . . 2 
+2 . . . . . . . . . . 2 
 2 . . . . . . . . . . 2 
 2 2 2 2 2 2 2 2 2 2 2 2 
 `, [myTiles.transparency16,sprites.dungeon.floorLight2,sprites.castle.tileGrass1], TileScale.Sixteen);
