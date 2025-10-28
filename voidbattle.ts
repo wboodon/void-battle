@@ -8,6 +8,7 @@ enum Direction {
 enum SpriteAction {
     Idle,
     Move,
+    Hurt,
     Fall,
     Die
 }
@@ -48,6 +49,10 @@ namespace animation {
         [key: number]: Animation[];
     }
 
+    interface StateMap {
+        [key: number]: number;
+    }
+
     let stateMachines: AnimationStateMachine[];
 
     // should allow you to change the sprite's animation based on its direction
@@ -59,6 +64,7 @@ namespace animation {
         lastAction: number;
         animationActive: boolean = false;
         stateAnimations: AnimationMap = {};
+        autoTransitions: StateMap = {};
 
         constructor(sprite: vb.VBSprite) {
             this.sprite = sprite;
@@ -86,6 +92,10 @@ namespace animation {
         }
 
         update() {
+            // first priority, check if the state was changed externally
+            // second priority, change state if animation ended and there's an autotransition
+
+
             // detect if the action has been changed
             if(this.lastAction != this.sprite._action || this.lastDir != this.dir) {
                 this.lastAction = this.sprite._action;
@@ -93,6 +103,16 @@ namespace animation {
                 const anim = this.getAnimationFromState(this.lastAction)
                 if(anim)
                     anim.runAnimationOnSprite(this.sprite);
+            } else if(!this.animationActive){
+                // transition to next state
+                const nextAction = this.autoTransitions[this.lastAction];
+                if(nextAction !== undefined) {
+                    this.lastAction = nextAction;
+                    this.sprite._action = nextAction;
+                    const anim = this.getAnimationFromState(nextAction);
+                    if(anim)
+                        anim.runAnimationOnSprite(this.sprite);
+                }
             }
             this.animationActive = false;
         }
@@ -104,6 +124,10 @@ namespace animation {
         // You should really put these in the order [left, up, right, down]
         setStateAnimations(state: number, animations: Animation[]) {
             this.stateAnimations[state] = animations;
+        }
+
+        setAutoTransition(oldState: number, newState: number) {
+            this.autoTransitions[oldState] = newState;
         }
 
         getAnimationFromState(state: number): Animation {
@@ -129,12 +153,15 @@ namespace vb {
         sm: animation.AnimationStateMachine;
         dir: Direction = Direction.Down;
         onDeathCallback: () => void;
+        onHurtCallback: () => void;
         canPush: boolean = false;
         pushable: boolean = false;
         canCrush: boolean = false;
         crushable: boolean = false;
+        hittable: boolean = false;
         hitboxWidth: number = 16;
         hitboxHeight: number = 16;
+        health: number = 1;
 
         // trust me bro you dont wanna set this yourself
         location: Location;
@@ -201,6 +228,10 @@ namespace vb {
             this.onDeathCallback = cb;
         }
 
+        onHurt(cb: () => void) {
+            this.onHurtCallback = cb;
+        }
+
         setDirection(dir: Direction) {
             this.dir = dir;
             this.sm.setDirection(dir);
@@ -226,6 +257,21 @@ namespace vb {
             }            
         }
 
+        hit() {
+            if(!this.hittable) return;
+            
+            this.startEffect(effects.disintegrate, 200);
+            this.health--;
+
+            if (this.onHurtCallback)
+                control.runInParallel(this.onHurtCallback);
+            
+            if(this.health <= 0){
+                sprites.destroy(this, effects.disintegrate, 500);
+                this.die();
+            }
+        }
+
     }
 
     export class VBPlayerSprite extends VBSprite {
@@ -244,6 +290,8 @@ namespace vb {
             this.pushable = true;
             this.canCrush = false;
             this.crushable = true;
+            this.health = 3;
+            this.hittable = true;
         }
 
         _setupButtonEvents() {
@@ -263,6 +311,9 @@ namespace vb {
             });
             this.ctrl.onButtonEvent(ControllerButton.A, ControllerButtonEvent.Pressed, () => {
                 this.handleButtonInput(ControllerButton.A, ControllerButtonEvent.Pressed);
+            });
+            this.ctrl.onButtonEvent(ControllerButton.B, ControllerButtonEvent.Pressed, () => {
+                this.handleButtonInput(ControllerButton.B, ControllerButtonEvent.Pressed);
             });
         }
 
@@ -297,6 +348,9 @@ namespace vb {
                     break;
                 case ControllerButton.A:
                     this.tryPrimaryAction();
+                    break;
+                case ControllerButton.B:
+                    this.trySecondaryAction();
                     break;
             }
         }
@@ -337,6 +391,17 @@ namespace vb {
                 this.storedTile = tiles.getTileImage(neighborTl);
                 tiles.setTileAt(neighborTl, assets.image`blankTile`);
                 this.endTurn();
+            }
+        }
+
+        trySecondaryAction() {
+            const neighbor: Location = this.getNeighboringLocation(this.dir);
+            if (neighbor.isOccupied()) {
+                const s = neighbor.getSprite();
+                if(s.hittable) {
+                    s.hit();
+                    this.endTurn();
+                }
             }
         }
     }

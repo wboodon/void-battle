@@ -61,7 +61,9 @@ switch(level) {
     c c c c c c c c b b b b b c c c
 `, vb.location(loc.column, loc.row));
             boulder.pushable = true;
+            boulder.hittable = true;
             boulder.canCrush = true;
+            boulder.health = 2;
             boulder.sm.setStateAnimations(SpriteAction.Idle, [
                 new animation.Animation(assets.animation`boulder`, 200, true)
             ]);
@@ -102,6 +104,10 @@ player1Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`witchRight`, 200, true),
     new animation.Animation(assets.animation`witchForward`, 200, true)
 ]);
+player1Sprite.sm.setStateAnimations(SpriteAction.Hurt, [
+    new animation.Animation(assets.animation`witchHurt`, 200, false)
+]);
+player1Sprite.sm.setAutoTransition(SpriteAction.Hurt, SpriteAction.Idle);
 //map.placeOnTile(player1Sprite, vb.location(1, 7));
 player1Sprite.onTurnEnd(function() {
     isP1Turn = false;
@@ -113,8 +119,10 @@ player1Sprite.onDeath(function() {
     pause(2000);
     game.setGameOverMessage(true, "Player 2 Wins!");
     game.gameOverPlayerWin(2);
-})
-
+});
+player1Sprite.onHurt(function() {
+    player1Sprite._action = SpriteAction.Hurt;
+});
 /**
  * Player 2 setup
  */
@@ -142,6 +150,10 @@ player2Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`purpleWitchRight`, 200, true),
     new animation.Animation(assets.animation`purpleWitchForward`, 200, true)
 ]);
+player2Sprite.sm.setStateAnimations(SpriteAction.Hurt, [
+    new animation.Animation(assets.animation`purpleWitchHurt`, 200, false)
+]);
+player2Sprite.sm.setAutoTransition(SpriteAction.Hurt, SpriteAction.Idle);
 //map.placeOnTile(player2Sprite, vb.location(2, 7));
 //map.placeOnTile(player2Sprite, vb.location(10, 2));
 player2Sprite.onTurnEnd(function () {
@@ -154,6 +166,9 @@ player2Sprite.onDeath(function () {
     pause(2000);
     game.setGameOverMessage(true, "Player 1 Wins!");
     game.gameOverPlayerWin(1);
+});
+player2Sprite.onHurt(function () {
+    player2Sprite._action = SpriteAction.Hurt;
 })
 
 /*
