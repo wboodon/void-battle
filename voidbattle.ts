@@ -152,8 +152,8 @@ namespace vb {
     export class VBSprite extends sprites.ExtendableSprite {
         sm: animation.AnimationStateMachine;
         dir: Direction = Direction.Down;
-        onDeathCallback: () => void;
-        onHurtCallback: () => void;
+        onDeathCallback: (sprite: VBSprite) => void;
+        onHurtCallback: (sprite: VBSprite) => void;
         canPush: boolean = false;
         pushable: boolean = false;
         canCrush: boolean = false;
@@ -213,7 +213,8 @@ namespace vb {
 
         update(deltaTimeMillis: number) {
             if (this.tileKindAt(TileDirection.Center, assets.image`blankTile`)) {
-                sprites.destroy(this, effects.fire, 2000);
+                this._action = SpriteAction.Fall;
+                //sprites.destroy(this, effects.fire, 2000);
                 this.die();
             }
         }
@@ -221,14 +222,16 @@ namespace vb {
         die() {
             currentMap().removeFromMap(this);
             if (this.onDeathCallback)
-                control.runInParallel(this.onDeathCallback);
+                control.runInParallel(() => {
+                    this.onDeathCallback(this);
+                });
         }
 
-        onDeath(cb: () => void) {
+        onDeath(cb: (sprite: VBSprite) => void) {
             this.onDeathCallback = cb;
         }
 
-        onHurt(cb: () => void) {
+        onHurt(cb: (sprite: VBSprite) => void) {
             this.onHurtCallback = cb;
         }
 
@@ -264,7 +267,9 @@ namespace vb {
             this.health--;
 
             if (this.onHurtCallback)
-                control.runInParallel(this.onHurtCallback);
+                control.runInParallel(() => {
+                    this.onHurtCallback(this);
+                });
             
             if(this.health <= 0){
                 sprites.destroy(this, effects.disintegrate, 500);

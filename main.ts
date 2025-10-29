@@ -67,6 +67,12 @@ switch(level) {
             boulder.sm.setStateAnimations(SpriteAction.Idle, [
                 new animation.Animation(assets.animation`boulder`, 200, true)
             ]);
+            boulder.sm.setStateAnimations(SpriteAction.Hurt, [
+                new animation.Animation(assets.animation`boulderCracked`, 200, true)
+            ]);
+            boulder.onHurt(function (sprite: vb.VBSprite) {
+                sprite._action = SpriteAction.Hurt;
+            })
         }
         break;
     default:
@@ -107,6 +113,9 @@ player1Sprite.sm.setStateAnimations(SpriteAction.Idle, [
 player1Sprite.sm.setStateAnimations(SpriteAction.Hurt, [
     new animation.Animation(assets.animation`witchHurt`, 200, false)
 ]);
+player1Sprite.sm.setStateAnimations(SpriteAction.Fall, [
+    new animation.Animation(assets.animation`witchFall`, 150, false)
+]);
 player1Sprite.sm.setAutoTransition(SpriteAction.Hurt, SpriteAction.Idle);
 //map.placeOnTile(player1Sprite, vb.location(1, 7));
 player1Sprite.onTurnEnd(function() {
@@ -120,7 +129,7 @@ player1Sprite.onDeath(function() {
     game.setGameOverMessage(true, "Player 2 Wins!");
     game.gameOverPlayerWin(2);
 });
-player1Sprite.onHurt(function() {
+player1Sprite.onHurt(function () {
     player1Sprite._action = SpriteAction.Hurt;
 });
 /**
@@ -153,6 +162,9 @@ player2Sprite.sm.setStateAnimations(SpriteAction.Idle, [
 player2Sprite.sm.setStateAnimations(SpriteAction.Hurt, [
     new animation.Animation(assets.animation`purpleWitchHurt`, 200, false)
 ]);
+player2Sprite.sm.setStateAnimations(SpriteAction.Fall, [
+    new animation.Animation(assets.animation`purpleWitchFall`, 150, false)
+]);
 player2Sprite.sm.setAutoTransition(SpriteAction.Hurt, SpriteAction.Idle);
 //map.placeOnTile(player2Sprite, vb.location(2, 7));
 //map.placeOnTile(player2Sprite, vb.location(10, 2));
@@ -169,7 +181,7 @@ player2Sprite.onDeath(function () {
 });
 player2Sprite.onHurt(function () {
     player2Sprite._action = SpriteAction.Hurt;
-})
+});
 
 /*
 let boulder = new vb.VBSprite(img`
@@ -220,6 +232,9 @@ boulder.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`boulder`, 200, true)
 ])
 */
+const heartImage = assets.image`heart`;
+const heartSpacing = heartImage.width + 1;
+
 game.onPaint(function() {
     // draw HUD
     screen.drawLine(0, 0, 160, 0, isP1Turn ? 4 : 9);
@@ -234,6 +249,11 @@ game.onPaint(function() {
 
     screen.drawTransparentImage(assets.image`selectedItemFrame`, 2, 2);
     screen.drawTransparentImage(assets.image`selectedItemFrame`, 138, 2);
+
+    for(let i = 0; i < 3; i++) {
+        screen.drawTransparentImage((i + 1 <= player1Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 25 + i * heartSpacing, 8);
+        screen.drawTransparentImage((i + 1 <= player2Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 106 + i * heartSpacing, 8);
+    }
 
     screen.print("P" + (isP1Turn ? "1" : "2") + " Turn", 60, 5, 1);
 });
