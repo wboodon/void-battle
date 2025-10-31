@@ -451,6 +451,16 @@ namespace vb {
                 }
             }
         }
+
+        push(dir: Direction) {
+            if (this._action == SpriteAction.Hurt) return;
+            super.push(dir);
+        }
+
+        hit() {
+            if(this._action == SpriteAction.Hurt) return;
+            super.hit();
+        }
     }
 }
 
