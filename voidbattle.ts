@@ -10,7 +10,9 @@ enum SpriteAction {
     Move,
     Hurt,
     Fall,
-    Die
+    Die,
+    Push,
+    Win
 }
 
 namespace SpriteKind {
@@ -219,12 +221,18 @@ namespace vb {
             }
         }
 
+        // if no callback function is provided, just destroy it after 2 seconds i guess
         die() {
             currentMap().removeFromMap(this);
             if (this.onDeathCallback)
                 control.runInParallel(() => {
                     this.onDeathCallback(this);
                 });
+            else
+                control.runInParallel(() => {
+                    pause(2000)
+                    sprites.destroy(this);
+                })
         }
 
         onDeath(cb: (sprite: VBSprite) => void) {
@@ -279,6 +287,8 @@ namespace vb {
 
     }
 
+    export const MoveCooldown = 500;
+    export const MoveBuffer = 250;
     export class VBPlayerSprite extends VBSprite {
         ctrl: controller.Controller;
         isMyTurn: boolean = false;
@@ -286,6 +296,9 @@ namespace vb {
         storedTile: Image;
         // failsafe if there are shenanigans with the turns
         controlsLocked: boolean = false;
+        cooldownTimer = MoveCooldown;
+        isInCooldown = false;
+        bufferedMove: ControllerButton;
 
         constructor(spriteImage: Image, ctrl: controller.Controller, loc?: Location, kind?: number, dir?: Direction){
             super(spriteImage, loc, kind, dir);
@@ -297,6 +310,21 @@ namespace vb {
             this.crushable = true;
             this.health = 3;
             this.hittable = true;
+        }
+
+        update(deltaTimeMillis: number) {
+            super.update(deltaTimeMillis);
+
+            if (!this.isInCooldown && this.bufferedMove) {
+                console.log("buffered move time!");
+                this.handleButtonInput(this.bufferedMove, ControllerButtonEvent.Pressed);
+            }
+
+            this.isInCooldown = this.cooldownTimer < MoveCooldown;
+            if (this.isInCooldown)
+                this.cooldownTimer = Math.min(this.cooldownTimer + deltaTimeMillis, MoveCooldown);
+            
+                
         }
 
         _setupButtonEvents() {
@@ -332,12 +360,23 @@ namespace vb {
 
         endTurn() {
             this.isMyTurn = false;
+            this.cooldownTimer = 0;
             if( this.turnEndCallback ) this.turnEndCallback();
         }
 
         handleButtonInput(button: ControllerButton, event: ControllerButtonEvent) {
-            if(this.controlsLocked || !this.isMyTurn) return;
+            if (this.controlsLocked) return;
+
+            if (this.isInCooldown) {
+                if (MoveCooldown - this.cooldownTimer <= MoveBuffer)
+                    this.bufferedMove = button;
+                return;
+            }
             
+            console.log("move time!");
+
+            this.bufferedMove = null;
+
             switch(button) {
                 case ControllerButton.Left:
                     this.step(Direction.Left);
@@ -372,6 +411,7 @@ namespace vb {
             } else if (neighbor.isOccupied()) {
                 // handle walking into a cell with another sprite
                 neighbor.getSprite().push(dir);
+                this._action = SpriteAction.Push;
             } else {
                 // move
                 placeOnTile(this, neighbor);
@@ -383,6 +423,7 @@ namespace vb {
 
         // attempts to interact using the A button. If the action fails, return false
         tryPrimaryAction() {
+            //this.cooldownTimer = 0;
             const neighbor: Location = this.getNeighboringLocation(this.dir);
             const neighborTl: tiles.Location = neighbor.tl;
             
@@ -404,6 +445,7 @@ namespace vb {
             if (neighbor.isOccupied()) {
                 const s = neighbor.getSprite();
                 if(s.hittable) {
+                    this._action = SpriteAction.Push;
                     s.hit();
                     this.endTurn();
                 }

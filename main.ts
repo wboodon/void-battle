@@ -1,7 +1,7 @@
 const numLevels = 3;
 let level = 0;
 
-game.showLongText("Welcome to Void Battle! This is a 2-player PvP game, so grab a friend!", DialogLayout.Full);
+game.showLongText("Welcome to Void Battle! This is a 2-player PvP game, so grab a friend!\n \nHappy Halloween everyone!!\n - Will B", DialogLayout.Full);
 
 while (level < 1 || level > numLevels) {
     game.showLongText("There are " + numLevels + " levels to pick from at the moment.", DialogLayout.Full);
@@ -70,9 +70,12 @@ switch(level) {
             boulder.sm.setStateAnimations(SpriteAction.Hurt, [
                 new animation.Animation(assets.animation`boulderCracked`, 200, true)
             ]);
+            boulder.sm.setStateAnimations(SpriteAction.Fall, [
+                new animation.Animation(assets.animation`boulderFall`, 200, false)
+            ]);
             boulder.onHurt(function (sprite: vb.VBSprite) {
                 sprite._action = SpriteAction.Hurt;
-            })
+            });
         }
         break;
     default:
@@ -110,13 +113,23 @@ player1Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`witchRight`, 200, true),
     new animation.Animation(assets.animation`witchForward`, 200, true)
 ]);
+player1Sprite.sm.setStateAnimations(SpriteAction.Push, [
+    new animation.Animation(assets.animation`witchPushLeft`, 500, false),
+    new animation.Animation(assets.animation`witchPushBack`, 500, false),
+    new animation.Animation(assets.animation`witchPushRight`, 500, false),
+    new animation.Animation(assets.animation`witchPushForward`, 500, false)
+]);
 player1Sprite.sm.setStateAnimations(SpriteAction.Hurt, [
     new animation.Animation(assets.animation`witchHurt`, 200, false)
 ]);
 player1Sprite.sm.setStateAnimations(SpriteAction.Fall, [
     new animation.Animation(assets.animation`witchFall`, 150, false)
 ]);
+player1Sprite.sm.setStateAnimations(SpriteAction.Win, [
+    new animation.Animation(assets.animation`witchWin`, 200, false)
+]);
 player1Sprite.sm.setAutoTransition(SpriteAction.Hurt, SpriteAction.Idle);
+player1Sprite.sm.setAutoTransition(SpriteAction.Push, SpriteAction.Idle);
 //map.placeOnTile(player1Sprite, vb.location(1, 7));
 player1Sprite.onTurnEnd(function() {
     isP1Turn = false;
@@ -125,7 +138,9 @@ player1Sprite.onTurnEnd(function() {
 player1Sprite.onDeath(function() {
     player1Sprite.controlsLocked = true;
     player2Sprite.controlsLocked = true;
-    pause(2000);
+    pause(500);
+    player2Sprite._action = SpriteAction.Win;
+    pause(1500);
     game.setGameOverMessage(true, "Player 2 Wins!");
     game.gameOverPlayerWin(2);
 });
@@ -159,13 +174,23 @@ player2Sprite.sm.setStateAnimations(SpriteAction.Idle, [
     new animation.Animation(assets.animation`purpleWitchRight`, 200, true),
     new animation.Animation(assets.animation`purpleWitchForward`, 200, true)
 ]);
+player2Sprite.sm.setStateAnimations(SpriteAction.Push, [
+    new animation.Animation(assets.animation`purpleWitchPushLeft`, 500, false),
+    new animation.Animation(assets.animation`purpleWitchPushBack`, 500, false),
+    new animation.Animation(assets.animation`purpleWitchPushRight`, 500, false),
+    new animation.Animation(assets.animation`purpleWitchPushForward`, 500, false)
+]);
 player2Sprite.sm.setStateAnimations(SpriteAction.Hurt, [
     new animation.Animation(assets.animation`purpleWitchHurt`, 200, false)
 ]);
 player2Sprite.sm.setStateAnimations(SpriteAction.Fall, [
     new animation.Animation(assets.animation`purpleWitchFall`, 150, false)
 ]);
+player2Sprite.sm.setStateAnimations(SpriteAction.Win, [
+    new animation.Animation(assets.animation`purpleWitchWin`, 200, false)
+]);
 player2Sprite.sm.setAutoTransition(SpriteAction.Hurt, SpriteAction.Idle);
+player2Sprite.sm.setAutoTransition(SpriteAction.Push, SpriteAction.Idle);
 //map.placeOnTile(player2Sprite, vb.location(2, 7));
 //map.placeOnTile(player2Sprite, vb.location(10, 2));
 player2Sprite.onTurnEnd(function () {
@@ -175,7 +200,9 @@ player2Sprite.onTurnEnd(function () {
 player2Sprite.onDeath(function () {
     player1Sprite.controlsLocked = true;
     player2Sprite.controlsLocked = true;
-    pause(2000);
+    pause(500);
+    player1Sprite._action = SpriteAction.Win;
+    pause(1500);
     game.setGameOverMessage(true, "Player 1 Wins!");
     game.gameOverPlayerWin(1);
 });
@@ -235,27 +262,55 @@ boulder.sm.setStateAnimations(SpriteAction.Idle, [
 const heartImage = assets.image`heart`;
 const heartSpacing = heartImage.width + 1;
 
+const cooldownBarWidth = 78;
+const panelHeight = 24;
+
+function drawCooldownBar(sprite: vb.VBPlayerSprite, x: number, y: number, maxWidth: number, height: number) {
+    const cooldownPercentage = sprite.cooldownTimer / vb.MoveCooldown;
+    screen.fillRect(x, y, maxWidth * cooldownPercentage, height, 13);
+}
+
 game.onPaint(function() {
     // draw HUD
-    screen.drawLine(0, 0, 160, 0, isP1Turn ? 4 : 9);
-    screen.fillRect(0, 1, 160, 22, isP1Turn ? 2 : 6);
-    screen.drawLine(0, 23, 160, 23, isP1Turn ? 14 : 8);
+    //screen.drawLine(0, 0, 160, 0, isP1Turn ? 4 : 9);
+    //screen.fillRect(0, 1, 160, 22, isP1Turn ? 2 : 6);
+    //screen.drawLine(0, 23, 160, 23, isP1Turn ? 14 : 8);
+
+    
+    screen.drawImage(!player1Sprite.isInCooldown ? assets.image`p1HudActive` : assets.image`hudInactive`, 0, 0);
+    screen.drawImage(!player2Sprite.isInCooldown ? assets.image`p2HudActive` : assets.image`hudInactive`, 80, 0);
+
+    if (player1Sprite.isInCooldown)
+        drawCooldownBar(player1Sprite, 1, 1, cooldownBarWidth, panelHeight - 2);
+
+    if (player2Sprite.isInCooldown)
+        drawCooldownBar(player2Sprite, 3 + cooldownBarWidth, 1, cooldownBarWidth, panelHeight - 2);
 
     if (player1Sprite.storedTile)
-        screen.drawImage(player1Sprite.storedTile, 5, 5);
+        screen.drawImage(player1Sprite.storedTile, 6, 5);
+    else
+        screen.drawTransparentImage(assets.image`wandIcon`, 6, 5);
     
     if (player2Sprite.storedTile)
-        screen.drawImage(player2Sprite.storedTile, 141, 5);
+        screen.drawImage(player2Sprite.storedTile, 86, 5);
+    else
+        screen.drawTransparentImage(assets.image`wandIcon`, 86, 5);
 
-    screen.drawTransparentImage(assets.image`selectedItemFrame`, 2, 2);
-    screen.drawTransparentImage(assets.image`selectedItemFrame`, 138, 2);
+    screen.drawTransparentImage(assets.image`selectedItemFrame`, 3, 2);
+    screen.drawTransparentImage(assets.image`selectedItemFrame`, 83, 2);
+
+    screen.drawTransparentImage(assets.image`fistIcon`, 28, 5);
+    screen.drawTransparentImage(assets.image`bButtonFrameEnabled`, 25, 2);
+
+    screen.drawTransparentImage(assets.image`fistIcon`, 108, 5);
+    screen.drawTransparentImage(assets.image`bButtonFrameEnabled`, 105, 2);
 
     for(let i = 0; i < 3; i++) {
-        screen.drawTransparentImage((i + 1 <= player1Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 25 + i * heartSpacing, 8);
-        screen.drawTransparentImage((i + 1 <= player2Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 106 + i * heartSpacing, 8);
+        screen.drawTransparentImage((i + 1 <= player1Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 48 + i * heartSpacing, 8);
+        screen.drawTransparentImage((i + 1 <= player2Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 128 + i * heartSpacing, 8);
     }
 
-    screen.print("P" + (isP1Turn ? "1" : "2") + " Turn", 60, 5, 1);
+    //screen.print("P" + (isP1Turn ? "1" : "2") + " Turn", 60, 5, 1);
 });
 
 player1Sprite.startTurn();
