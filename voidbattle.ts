@@ -367,7 +367,7 @@ namespace vb {
         handleButtonInput(button: ControllerButton, event: ControllerButtonEvent) {
             if (this.controlsLocked) return;
 
-            if (this.isInCooldown) {
+            if (this.isInCooldown || this._action == SpriteAction.Hurt) {
                 if (MoveCooldown - this.cooldownTimer <= MoveBuffer)
                     this.bufferedMove = button;
                 return;

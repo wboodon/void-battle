@@ -85,7 +85,8 @@ switch(level) {
 
 //game.debug = true;
 let isP1Turn: boolean = true;
-
+let p1Dead: boolean = false;
+let p2Dead: boolean = false;
 /**
  * Player 1 setup
  */
@@ -136,6 +137,7 @@ player1Sprite.onTurnEnd(function() {
     player2Sprite.startTurn();
 });
 player1Sprite.onDeath(function() {
+    p1Dead = true;
     player1Sprite.controlsLocked = true;
     player2Sprite.controlsLocked = true;
     pause(500);
@@ -198,6 +200,7 @@ player2Sprite.onTurnEnd(function () {
     player1Sprite.startTurn();
 });
 player2Sprite.onDeath(function () {
+    p2Dead = true;
     player1Sprite.controlsLocked = true;
     player2Sprite.controlsLocked = true;
     pause(500);
@@ -272,45 +275,53 @@ function drawCooldownBar(sprite: vb.VBPlayerSprite, x: number, y: number, maxWid
 
 game.onPaint(function() {
     // draw HUD
-    //screen.drawLine(0, 0, 160, 0, isP1Turn ? 4 : 9);
-    //screen.fillRect(0, 1, 160, 22, isP1Turn ? 2 : 6);
-    //screen.drawLine(0, 23, 160, 23, isP1Turn ? 14 : 8);
-
     
+    // player 1 HUD
     screen.drawImage(!player1Sprite.isInCooldown ? assets.image`p1HudActive` : assets.image`hudInactive`, 0, 0);
-    screen.drawImage(!player2Sprite.isInCooldown ? assets.image`p2HudActive` : assets.image`hudInactive`, 80, 0);
+    if (p1Dead) {
+        screen.drawTransparentImage(assets.image`uhOhText`, 0, 0);
+    } else if (player1Sprite._action == SpriteAction.Hurt) {
+        screen.drawTransparentImage(assets.image`ouchText`, 0, 0);
+    } else {
+        if (player1Sprite.isInCooldown)
+            drawCooldownBar(player1Sprite, 1, 1, cooldownBarWidth, panelHeight - 2);
+        
+        if (player1Sprite.storedTile)
+            screen.drawImage(player1Sprite.storedTile, 6, 5);
+        else
+            screen.drawTransparentImage(assets.image`wandIcon`, 6, 5);
+        
+        screen.drawTransparentImage(assets.image`selectedItemFrame`, 3, 2);
+        screen.drawTransparentImage(assets.image`fistIcon`, 28, 5);
+        screen.drawTransparentImage(assets.image`bButtonFrameEnabled`, 25, 2);
 
-    if (player1Sprite.isInCooldown)
-        drawCooldownBar(player1Sprite, 1, 1, cooldownBarWidth, panelHeight - 2);
-
-    if (player2Sprite.isInCooldown)
-        drawCooldownBar(player2Sprite, 3 + cooldownBarWidth, 1, cooldownBarWidth, panelHeight - 2);
-
-    if (player1Sprite.storedTile)
-        screen.drawImage(player1Sprite.storedTile, 6, 5);
-    else
-        screen.drawTransparentImage(assets.image`wandIcon`, 6, 5);
-    
-    if (player2Sprite.storedTile)
-        screen.drawImage(player2Sprite.storedTile, 86, 5);
-    else
-        screen.drawTransparentImage(assets.image`wandIcon`, 86, 5);
-
-    screen.drawTransparentImage(assets.image`selectedItemFrame`, 3, 2);
-    screen.drawTransparentImage(assets.image`selectedItemFrame`, 83, 2);
-
-    screen.drawTransparentImage(assets.image`fistIcon`, 28, 5);
-    screen.drawTransparentImage(assets.image`bButtonFrameEnabled`, 25, 2);
-
-    screen.drawTransparentImage(assets.image`fistIcon`, 108, 5);
-    screen.drawTransparentImage(assets.image`bButtonFrameEnabled`, 105, 2);
-
-    for(let i = 0; i < 3; i++) {
-        screen.drawTransparentImage((i + 1 <= player1Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 48 + i * heartSpacing, 8);
-        screen.drawTransparentImage((i + 1 <= player2Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 128 + i * heartSpacing, 8);
+        for (let i = 0; i < 3; i++)
+            screen.drawTransparentImage((i + 1 <= player1Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 48 + i * heartSpacing, 8);
+        
     }
+    
+    // player 2 HUD
+    screen.drawImage(!player2Sprite.isInCooldown ? assets.image`p2HudActive` : assets.image`hudInactive`, 80, 0);
+    if (p2Dead) {
+        screen.drawTransparentImage(assets.image`uhOhText`, 80, 0);
+    } else if (player2Sprite._action == SpriteAction.Hurt) {
+        screen.drawTransparentImage(assets.image`ouchText`, 80, 0);
+    } else {
+        if (player2Sprite.isInCooldown)
+            drawCooldownBar(player2Sprite, 3 + cooldownBarWidth, 1, cooldownBarWidth, panelHeight - 2);
 
-    //screen.print("P" + (isP1Turn ? "1" : "2") + " Turn", 60, 5, 1);
+        if (player2Sprite.storedTile)
+            screen.drawImage(player2Sprite.storedTile, 86, 5);
+        else
+            screen.drawTransparentImage(assets.image`wandIcon`, 86, 5);
+
+        screen.drawTransparentImage(assets.image`selectedItemFrame`, 83, 2);
+        screen.drawTransparentImage(assets.image`fistIcon`, 108, 5);
+        screen.drawTransparentImage(assets.image`bButtonFrameEnabled`, 105, 2);
+
+        for(let i = 0; i < 3; i++)
+            screen.drawTransparentImage((i + 1 <= player2Sprite.health) ? assets.image`heart` : assets.image`emptyHeart`, 128 + i * heartSpacing, 8);
+    }
 });
 
 player1Sprite.startTurn();
