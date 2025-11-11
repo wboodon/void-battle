@@ -360,6 +360,7 @@ namespace vb {
 
         endTurn() {
             this.isMyTurn = false;
+            this.isInCooldown = true;
             this.cooldownTimer = 0;
             if( this.turnEndCallback ) this.turnEndCallback();
         }
