@@ -13,7 +13,8 @@
         "images.g.jres",
         "images.g.ts",
         "voidbattle.ts",
-        "tilespritemap.ts"
+        "tilespritemap.ts",
+        "animations.ts"
     ],
     "testFiles": [
         "test.ts"

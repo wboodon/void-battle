@@ -132,15 +132,18 @@ switch(level) {
             boulder.hittable = true;
             boulder.canCrush = true;
             boulder.health = 2;
-            boulder.sm.setStateAnimations(SpriteAction.Idle, [
-                new animation.Animation(assets.animation`boulder`, 200, true)
-            ]);
-            boulder.sm.setStateAnimations(SpriteAction.Hurt, [
-                new animation.Animation(assets.animation`boulderCracked`, 200, true)
-            ]);
-            boulder.sm.setStateAnimations(SpriteAction.Fall, [
-                new animation.Animation(assets.animation`boulderFall`, 200, false)
-            ]);
+            boulder.sm.setStateAnimations(
+                SpriteAction.Idle, 
+                animation.getStateAnimations('boulder', 'idle')
+            );
+            boulder.sm.setStateAnimations(
+                SpriteAction.Hurt, 
+                animation.getStateAnimations('boulder', 'hurt')
+            );
+            boulder.sm.setStateAnimations(
+                SpriteAction.Fall, 
+                animation.getStateAnimations('boulder', 'fall')
+            );
             boulder.onHurt(function (sprite: vb.VBSprite) {
                 sprite._action = SpriteAction.Hurt;
             });
@@ -176,27 +179,14 @@ let player1Sprite = new vb.VBPlayerSprite(img`
     . . . . . f f f f f f . . . . .
     . . . . . f f . . f f . . . . .
 `, controller.player1, p1Start, SpriteKind.Player, Direction.Up);
-player1Sprite.sm.setStateAnimations(SpriteAction.Idle, [
-    new animation.Animation(assets.animation`witchLeft`, 200, true),
-    new animation.Animation(assets.animation`witchBack`, 200, true),
-    new animation.Animation(assets.animation`witchRight`, 200, true),
-    new animation.Animation(assets.animation`witchForward`, 200, true)
-]);
-player1Sprite.sm.setStateAnimations(SpriteAction.Push, [
-    new animation.Animation(assets.animation`witchPushLeft`, 500, false),
-    new animation.Animation(assets.animation`witchPushBack`, 500, false),
-    new animation.Animation(assets.animation`witchPushRight`, 500, false),
-    new animation.Animation(assets.animation`witchPushForward`, 500, false)
-]);
-player1Sprite.sm.setStateAnimations(SpriteAction.Hurt, [
-    new animation.Animation(assets.animation`witchHurt`, 200, false)
-]);
-player1Sprite.sm.setStateAnimations(SpriteAction.Fall, [
-    new animation.Animation(assets.animation`witchFall`, 150, false)
-]);
-player1Sprite.sm.setStateAnimations(SpriteAction.Win, [
-    new animation.Animation(assets.animation`witchWin`, 200, false)
-]);
+
+player1Sprite.sm.setStateAnimations(SpriteAction.Idle, animation.getStateAnimations('witch', 'move'));
+player1Sprite.sm.setStateAnimations(SpriteAction.Move, animation.getStateAnimations('witch', 'move'));
+player1Sprite.sm.setStateAnimations(SpriteAction.Push, animation.getStateAnimations('witch', 'push'));
+player1Sprite.sm.setStateAnimations(SpriteAction.Hurt, animation.getStateAnimations('witch', 'hurt'));
+player1Sprite.sm.setStateAnimations(SpriteAction.Fall, animation.getStateAnimations('witch', 'fall'));
+player1Sprite.sm.setStateAnimations(SpriteAction.Win, animation.getStateAnimations('witch', 'win'));
+
 player1Sprite.sm.setAutoTransition(SpriteAction.Hurt, SpriteAction.Idle);
 player1Sprite.sm.setAutoTransition(SpriteAction.Push, SpriteAction.Idle);
 //map.placeOnTile(player1Sprite, vb.location(1, 7));
