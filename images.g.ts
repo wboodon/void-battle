@@ -939,25 +939,6 @@ c c c c c c c c b b b b b c c c
 . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . 
 `];
-            case "witchPushBack":
-            case "anim23":return [img`
-. . . . . . . . . . . . . . . . 
-. . . . . . . . c c . . . . . . 
-. . . . . . . c 5 c . . . . . . 
-. . . . c c c 5 5 c c c . . . . 
-. . c c b c 5 5 5 5 c c c c . . 
-. c b b 5 b 5 5 5 5 b 5 b b c . 
-. c b 5 5 b b 5 5 b b 5 5 b c . 
-. . f 5 5 5 b b b b 5 5 5 c . . 
-. . f f 5 5 5 5 5 5 5 5 f f . . 
-. . f f f f f f f f f f f f . . 
-. . f f f f f f f f f f f f . . 
-. . e f f f f f f f f f f e . . 
-. . e b b f f f f f f b b e . . 
-. . . e f 5 5 b b 5 5 f e . . . 
-. . . f 5 5 5 5 5 5 5 5 f . . . 
-. . . . f f f f f f f f . . . . 
-`];
             case "purpleWitchPushForward":
             case "anim24":return [img`
 . . . . . . . . . . . . . . . . 
@@ -2204,6 +2185,25 @@ f . e e 1 1 1 a a 1 1 1 e e . f
 . . . . f 4 5 5 a a a a a e . . 
 . . . f 4 5 5 5 5 5 f e e . . . 
 . . . . f f f f f f f . . . . . 
+`];
+            case "witchPushBack":
+            case "anim23":return [img`
+. . . . . . . . . . . . . . . . 
+. . . . . . . . f f . . . . . . 
+. . . . . . . f 5 f . . . . . . 
+. . . . f f f 5 5 f f f . . . . 
+. . f f 4 f 5 5 5 5 f f f f . . 
+. f 4 4 5 4 5 5 5 5 4 5 4 4 f . 
+. f 4 5 5 4 4 5 5 4 4 5 5 4 f . 
+. . f 5 5 5 4 4 4 4 5 5 5 f . . 
+. . f f 5 5 5 5 5 5 5 5 f f . . 
+. . f f f f f f f f f f f f . . 
+. . f f f f f f f f f f f f . . 
+. . e f f f f f f f f f f e . . 
+. . e a a f f f f f f a a e . . 
+. . . e f 5 5 4 4 5 5 f e . . . 
+. . . f 5 5 5 5 5 5 5 5 f . . . 
+. . . . f f f f f f f f . . . . 
 `];
         }
         return null;
