@@ -3,6 +3,8 @@
 
  Turn-based tile movement and manipulation. Push your opponent into the void, crush them under a boulder, or trap them and force them to jump!
 
+ **NOTE:** The current GitHub deployment isn't actually the working current version of the game.
+
  ## To Do
  - More animations
  - Develop the art style a bit
