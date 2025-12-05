@@ -386,4 +386,3 @@ game.onPaint(function() {
 });
 
 player1Sprite.startTurn();
-effects.starField.startScreenEffect(10000, 20)
