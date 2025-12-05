@@ -26,7 +26,6 @@
     - map select
     - results
 
-
 > Open this page at [https://wboodon.github.io/void-battle/](https://wboodon.github.io/void-battle/)
 
 ## Use as Extension
