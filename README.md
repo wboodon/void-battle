@@ -3,6 +3,8 @@
 
  Tile-based movement and manipulation. Push your opponent into the void, crush them under a boulder, or trap them and force them to jump!
 
+**NOTE:** The current GitHub deployment isn't actually the working current version of the game. I recommend clicking Edit below the simulator, which will take you to the MakeCode Arcade editor. There you can check out the most recent version of the game (which is in the middle of being graphically overhauled)
+
 ## Planned for v0.3
 - pick from 4 characters
     - character selection screen
