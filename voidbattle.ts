@@ -287,8 +287,14 @@ namespace vb {
 
     }
 
-    export const MoveCooldown = 500;
+    export const MaxStamina = 500;
+    export const StepCost = 0;
+    export const HitCost = 250;
+    export const WandCost = 250;
+    export const MoveCooldown = 150;
+    export const PushCost = 500;
     export const MoveBuffer = 250;
+    export const StaminaRechargeRate = .25;
     export class VBPlayerSprite extends VBSprite {
         ctrl: controller.Controller;
         isMyTurn: boolean = false;
@@ -299,6 +305,8 @@ namespace vb {
         cooldownTimer = MoveCooldown;
         isInCooldown = false;
         bufferedMove: ControllerButton;
+
+        stamina: number = MaxStamina;
 
         constructor(spriteImage: Image, ctrl: controller.Controller, loc?: Location, kind?: number, dir?: Direction){
             super(spriteImage, loc, kind, dir);
@@ -324,7 +332,7 @@ namespace vb {
             if (this.isInCooldown)
                 this.cooldownTimer = Math.min(this.cooldownTimer + deltaTimeMillis, MoveCooldown);
             
-                
+            this.stamina = Math.min(MaxStamina, this.stamina + deltaTimeMillis * StaminaRechargeRate);
         }
 
         _setupButtonEvents() {
@@ -413,9 +421,11 @@ namespace vb {
                 // handle walking into a cell with another sprite
                 neighbor.getSprite().push(dir);
                 this._action = SpriteAction.Push;
+                this.stamina -= PushCost;
             } else {
                 // move
                 placeOnTile(this, neighbor);
+                this.stamina -= StepCost;
             }
             
             this.endTurn();
@@ -433,10 +443,12 @@ namespace vb {
             else if (tiles.tileAtLocationEquals(neighborTl, assets.image`blankTile`) && this.storedTile) {
                 tiles.setTileAt(neighborTl, this.storedTile);
                 this.storedTile = null;
+                this.stamina -= WandCost;
                 this.endTurn();
             } else if (!tiles.tileAtLocationEquals(neighborTl, assets.image`blankTile`) && !this.storedTile) {
                 this.storedTile = tiles.getTileImage(neighborTl);
                 tiles.setTileAt(neighborTl, assets.image`blankTile`);
+                this.stamina -= WandCost;
                 this.endTurn();
             }
         }
@@ -448,6 +460,7 @@ namespace vb {
                 if(s.hittable) {
                     this._action = SpriteAction.Push;
                     s.hit();
+                    this.stamina -= HitCost;
                     this.endTurn();
                 }
             }
