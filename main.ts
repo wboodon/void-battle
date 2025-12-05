@@ -1,6 +1,9 @@
 const numLevels = 3;
 let level = 0;
 
+scene.setBackgroundColor(15)
+game.setDialogTextColor(15)
+
 game.setDialogFrame(img`
     ..................................................................
     ....33.......33...........dddd............dddd............aaa.....
@@ -327,7 +330,7 @@ const cooldownBarWidth = 78;
 const panelHeight = 24;
 
 function drawCooldownBar(sprite: vb.VBPlayerSprite, x: number, y: number, maxWidth: number, height: number) {
-    const cooldownPercentage = sprite.cooldownTimer / vb.MoveCooldown;
+    const cooldownPercentage = sprite.stamina / vb.MaxStamina;
     screen.fillRect(x, y, maxWidth * cooldownPercentage, height, 13);
 }
 
@@ -341,7 +344,7 @@ game.onPaint(function() {
     } else if (player1Sprite._action == SpriteAction.Hurt) {
         screen.drawTransparentImage(assets.image`ouchText`, 0, 0);
     } else {
-        if (player1Sprite.isInCooldown)
+        if (player1Sprite.stamina < vb.MaxStamina)
             drawCooldownBar(player1Sprite, 1, 1, cooldownBarWidth, panelHeight - 2);
         
         if (player1Sprite.storedTile)
@@ -365,7 +368,7 @@ game.onPaint(function() {
     } else if (player2Sprite._action == SpriteAction.Hurt) {
         screen.drawTransparentImage(assets.image`ouchText`, 80, 0);
     } else {
-        if (player2Sprite.isInCooldown)
+        if (player2Sprite.stamina < vb.MaxStamina)
             drawCooldownBar(player2Sprite, 3 + cooldownBarWidth, 1, cooldownBarWidth, panelHeight - 2);
 
         if (player2Sprite.storedTile)
